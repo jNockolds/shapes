@@ -3,7 +3,9 @@ import numpy as np
 import time
 
 """Todo:
-- change how ending_sides is set to ensure it works with density
+- add a "sides" attribute to all shapes which holds the lines that make up the shape's sides
+    - need to change existing "sides" to "num_of_sides"
+    
 """
 
 # default values:
@@ -180,48 +182,49 @@ class NestedCircumscribedRegularPolygons(Shape):
     - layers - the number of polygons in the nested shape (note that circles aren't polygons)
     - circumscribedRegularPolygons - the list containing all of the polygons
     """
-    # constructors:
-    
-    ## one specific CircumscribedRegularPolygon:
-    def __init__(self, circumscribedRegularPolygon, layers=2):
-        self.layers = layers
-        self.circumscribedRegularPolygons = []
-        for i in range(layers):
-            self.circumscribedRegularPolygons.append(circumscribedRegularPolygon)
+    # constructor:
+    def __init__(self, regularPolygon_s, layers=2, precision=d_precision):
+        # one specific CircumscribedRegularPolygon:
+        if isinstance(regularPolygon_s, CircumscribedRegularPolygon):
+            self.layers = layers
+            self.circumscribedRegularPolygons = []
+            for i in range(layers):
+                self.circumscribedRegularPolygons.append(regularPolygon_s)
 
-    ## one specific RegularPolygon:
-    def __init__(self, regularPolygon, layers=2, precision=d_precision):
-        # making the polygon circumscribed:
-        radius = regularPolygon.radius
-        sides = regularPolygon.sides
-        density = regularPolygon.density
-        centre = regularPolygon.centre
-        angle_offset = regularPolygon.angle_offset
-        circumscribedRegularPolygon = CircumscribedRegularPolygon(radius, sides, density, centre, angle_offset, precision)
-
-        # assigning attributes: 
-        self.layers = layers
-        self.circumscribedRegularPolygons = []
-        for i in range(layers):
-            self.circumscribedRegularPolygons.append(circumscribedRegularPolygon)
-        
-    ## a list of CircumscribedRegularPolygons:
-    def __init__(self, circumscribedRegularPolygons : list):
-        self.layers = len(circumscribedRegularPolygons)
-        self.circumscribedRegularPolygons = circumscribedRegularPolygons
-    
-    ## a list of RegularPolygons:
-    def __init__(self, regularPolygons : list, precision=d_precision):
-        self.layers = len(regularPolygons)
-        self.circumscribedRegularPolygons = []
-        for i in range(self.layers):
+        # one specific RegularPolygon:
+        elif isinstance(regularPolygon_s, RegularPolygon):
             # making the polygon circumscribed:
-            radius = regularPolygons[i].radius
-            sides = regularPolygons[i].sides
-            density = regularPolygons[i].density
-            centre = regularPolygons[i].centre
-            angle_offset = regularPolygons[i].angle_offset
-            self.circumscribedRegularPolygons.append(CircumscribedRegularPolygon(radius, sides, density, centre, angle_offset, precision))
+            radius = regularPolygon_s.radius
+            sides = regularPolygon_s.sides
+            density = regularPolygon_s.density
+            centre = regularPolygon_s.centre
+            angle_offset = regularPolygon_s.angle_offset
+            circumscribedRegularPolygon = CircumscribedRegularPolygon(radius, sides, density, centre, angle_offset, precision)
+
+            # assigning attributes: 
+            self.layers = layers
+            self.circumscribedRegularPolygons = []
+            for i in range(layers):
+                self.circumscribedRegularPolygons.append(circumscribedRegularPolygon)
+
+        # a list of CircumscribedRegularPolygons:
+        elif isinstance(regularPolygon_s[0], CircumscribedRegularPolygon):
+            self.layers = len(regularPolygon_s)
+            self.circumscribedRegularPolygons = regularPolygon_s
+        
+        # a list of RegularPolygons:
+        elif isinstance(regularPolygon_s[0], RegularPolygon) and not isinstance(regularPolygon_s[0], CircumscribedRegularPolygon):
+            self.layers = len(regularPolygon_s)
+            self.circumscribedRegularPolygons = []
+            for i in range(self.layers):
+                # making the polygon circumscribed:
+                radius = regularPolygon_s[i].radius
+                sides = regularPolygon_s[i].sides
+                density = regularPolygon_s[i].density
+                centre = regularPolygon_s[i].centre
+                angle_offset = regularPolygon_s[i].angle_offset
+                self.circumscribedRegularPolygons.append(CircumscribedRegularPolygon(radius, sides, density, centre, angle_offset, precision))
+
 
     @measure_time
     def draw(self, pen):
@@ -247,14 +250,17 @@ start_time = time.time()
 
 # constructing shapes:
 
-circumscribed_regular_polygon1 = RegularPolygon(radius, 3)
-circumscribed_regular_polygon2 = RegularPolygon(radius, 4)
-circumscribed_regular_polygon3 = RegularPolygon(radius, 100)
+regular_polygon1 = RegularPolygon(radius, 5)
+regular_polygon2 = RegularPolygon(radius, 6)
+regular_polygon3 = RegularPolygon(radius, 3)
 
 
-circumscribed_regular_polygons = [circumscribed_regular_polygon1, circumscribed_regular_polygon2, circumscribed_regular_polygon3]
 
-nested_circumscribed_regular_polygons = NestedCircumscribedRegularPolygons(circumscribed_regular_polygons)
+
+
+regular_polygons = [regular_polygon1, regular_polygon2, regular_polygon3]
+
+nested_circumscribed_regular_polygons = NestedCircumscribedRegularPolygons(regular_polygons)
 
 
 
